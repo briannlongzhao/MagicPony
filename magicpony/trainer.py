@@ -25,6 +25,7 @@ class Trainer:
         self.test_result_dir = cfgs.get('test_result_dir', None)
 
         self.use_logger = cfgs.get('use_logger', True)
+        self.logger_type = cfgs.get('logger_type', 'tensorboard')
         self.log_image_freq = cfgs.get('log_image_freq', 1000)
         self.log_loss_freq = cfgs.get('log_loss_freq', 100)
         self.log_train = cfgs.get('log_train', False)
@@ -130,8 +131,18 @@ class Trainer:
 
         # initialize tensorboard logger
         if self.use_logger:
-            from torch.utils.tensorboard import SummaryWriter
-            self.logger = SummaryWriter(osp.join(self.checkpoint_dir, 'logs', datetime.now().strftime("%Y%m%d-%H%M%S")), flush_secs=10)
+            if self.logger_type == "tensorboard":
+                from torch.utils.tensorboard import SummaryWriter
+                self.logger = SummaryWriter(osp.join(self.checkpoint_dir, 'logs', datetime.now().strftime("%Y%m%d-%H%M%S")), flush_secs=10)
+            elif self.logger_type == "wandb":
+                from .utils.wandb_writter import WandbWriter
+                self.logger = WandbWriter(config=self.cfgs)
+                self.logger.watch(
+                    [self.model.netPrior, self.model.netInstance],
+                    log_freq=self.log_loss_freq
+                )
+            else:
+                raise NotImplementedError("Available logger: tensorboard, wandb")
             if self.log_val:
                 assert self.val_loader is not None, "val_data_dir must be specified for logging validation"
                 self.val_data_iterator = indefinite_generator(self.val_loader)
@@ -147,6 +158,9 @@ class Trainer:
                 self.save_checkpoint(epoch+1, total_iter=self.total_iter, save_optim=True)
             self.metrics_trace.save(osp.join(self.checkpoint_dir, 'metrics.json'))
         print(f"Training completed for all {epoch+1} epochs.")
+        if self.use_logger and self.logger_type == "wandb":
+            self.logger.finish()
+
 
     def run_train_epoch(self, epoch):
         metrics = self.make_metrics()
