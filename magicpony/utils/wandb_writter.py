@@ -11,7 +11,7 @@ class WandbWriter:
         )
 
 
-    def watch(self, models, log_freq, log="all", log_graph=True):
+    def watch(self, models, log_freq, log="all", log_graph=False):
         self.run.watch(models, log=log, log_freq=log_freq, log_graph=log_graph)
 
 
