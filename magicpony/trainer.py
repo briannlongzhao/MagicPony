@@ -157,6 +157,8 @@ class Trainer:
             if (epoch+1) % self.save_checkpoint_freq == 0:
                 self.save_checkpoint(epoch+1, total_iter=self.total_iter, save_optim=True)
             self.metrics_trace.save(osp.join(self.checkpoint_dir, 'metrics.json'))
+            if self.use_logger:
+                self.logger.add_scalar("epoch", epoch, self.total_iter)
         print(f"Training completed for all {epoch+1} epochs.")
         if self.use_logger and self.logger_type == "wandb":
             self.logger.finish()
