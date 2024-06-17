@@ -8,7 +8,7 @@ keep_num_checkpoint: -1  # -1 for keeping all checkpoints
 archive_code: true
 resume: false
 use_logger: true
-logger_type: wandb
+logger_type: tensorboard
 log_image_freq: 500
 log_loss_freq: 50
 save_train_result_freq: 10000
